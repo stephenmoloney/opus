@@ -102,6 +102,15 @@ defmodule Opus.Pipeline do
     stage_id = :erlang.unique_integer([:positive])
     callbacks = Opus.Pipeline.Registration.maybe_define_callbacks(stage_id, name, opts)
 
+    Code.ensure_compiled?(unquote(name)) ||
+      case Code.ensure_compiled(unquote(name)) do
+        {:error, reason} ->
+          raise "failed to compile and load #{unquote(name)}, ensure #{unquote(name)} exists"
+
+        {:module, module} ->
+          :ok
+      end
+
     quote do
       if unquote(name) == __MODULE__ || :erlang.function_exported(unquote(name), :pipeline?, 0) do
         unquote(callbacks)
